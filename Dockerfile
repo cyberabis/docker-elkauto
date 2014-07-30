@@ -36,20 +36,28 @@ RUN wget https://download.elasticsearch.org/kibana/kibana/kibana-3.1.0.tar.gz &&
 	rm kibana-3.1.0.tar.gz && \
 	mv kibana-3.1.0  kibana
 
-# Install curl utility
+# Install curl utility just for testing
 RUN apt-get update && \
 	apt-get install -y curl
 
-# Install apache2 to deploy kibana
-# Start/stop apache2 by: service apache2 start/stop. This starts on port 80.
+# Install Nginx
+# Start or stop with /etc/init.d/nginx start/stop. Runs on port 80.
 RUN apt-get update && \
-	apt-get install -y apache2
+	DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
 
-# Deploy kibana to apache2
-RUN mv /var/www/html /var/www/html_orig && \
-	mkdir /var/www/html && \
-	cp -r /kibana/* /var/www/html
+# Deploy kibana to Nginx
+RUN mv /usr/share/nginx/html /usr/share/nginx/html_orig && \
+	mkdir /usr/share/nginx/html && \
+	cp -r /kibana/* /usr/share/nginx/html
+
+# Create a start bash script
+RUN touch elk_start.sh && \
+	echo '#!/bin/bash' >> elk_start.sh && \
+	echo '/etc/init.d/nginx start &' >> elk_start.sh && \
+	echo 'exec /elasticsearch/bin/elasticsearch' >> elk_start.sh && \
+	chmod 777 elk_start.sh
 
 # 80=apache2, 9200=elasticsearch, 49021=logstash
 EXPOSE 80 9200 49021
 
+# Default command: docker run -d -p 80:80 -p 9200:9200 cyberabis/elk /elk_start.sh
