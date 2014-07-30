@@ -53,8 +53,10 @@ RUN apt-get update && \
 
 # Install Nginx
 # Start or stop with /etc/init.d/nginx start/stop. Runs on port 80.
+# Sed command is to make the worker threads of nginx run as user root
 RUN apt-get update && \
-	DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+	DEBIAN_FRONTEND=noninteractive apt-get install -y nginx && \
+	sed -i -e 's/www-data/root/g' /etc/nginx/nginx.conf
 
 # Deploy kibana to Nginx
 RUN mv /usr/share/nginx/html /usr/share/nginx/html_orig && \
