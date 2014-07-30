@@ -1,5 +1,13 @@
 # Dockerfile for ELK stack on Ubuntu base
 
+# Help:
+# Default command: docker run -d -p 80:80 -p 3333:3333 -p 9200:9200 cyberabis/elk /elk_start.sh
+# Default command will start ELK within a docker
+# To send data to elk, stream to TCP port 3333
+# Example: echo 'test data' | nc HOST 3333. Host is the IP of the docker host
+# To login to bash: docker run -t -i cyberabis/elk /bin/bash
+
+
 FROM ubuntu
 MAINTAINER Abishek Baskaran
 
@@ -25,10 +33,13 @@ RUN wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elastics
 
 # Logstash installation
 # Create a logstash.conf and start logstash by /logstash/bin/logstash agent -f logstash.conf
-RUN wget https://download.elasticsearch.org/logstash/logstash/logstash-contrib-1.4.2.tar.gz && \
-	tar xf logstash-contrib-1.4.2.tar.gz && \
-	rm logstash-contrib-1.4.2.tar.gz && \
-	mv logstash-contrib-1.4.2 logstash
+RUN wget https://download.elasticsearch.org/logstash/logstash/logstash-1.4.2.tar.gz && \
+	tar xf logstash-1.4.2.tar.gz && \
+	rm logstash-1.4.2.tar.gz && \
+	mv logstash-1.4.2 logstash && \
+	touch logstash.conf && \
+	echo 'input { tcp { port => 3333 } }' >> logstash.conf && \
+	echo 'output { elasticsearch { host => localhost } }' >> logstash.conf 
 
 # Kibana installation
 RUN wget https://download.elasticsearch.org/kibana/kibana/kibana-3.1.0.tar.gz && \
@@ -53,11 +64,11 @@ RUN mv /usr/share/nginx/html /usr/share/nginx/html_orig && \
 # Create a start bash script
 RUN touch elk_start.sh && \
 	echo '#!/bin/bash' >> elk_start.sh && \
+	echo '/elasticsearch/bin/elasticsearch &' >> elk_start.sh && \
 	echo '/etc/init.d/nginx start &' >> elk_start.sh && \
-	echo 'exec /elasticsearch/bin/elasticsearch' >> elk_start.sh && \
+	echo 'exec /logstash/bin/logstash agent -f /logstash.conf' >> elk_start.sh && \
 	chmod 777 elk_start.sh
 
-# 80=apache2, 9200=elasticsearch, 49021=logstash
-EXPOSE 80 9200 49021
+# 80=apache2, 9200=elasticsearch, 3333=lockstash tcp input
+EXPOSE 80 3333 9200 49021
 
-# Default command: docker run -d -p 80:80 -p 9200:9200 cyberabis/elk /elk_start.sh
