@@ -1,11 +1,11 @@
 # Dockerfile for ELK stack on Ubuntu base
 
 # Help:
-# Default command: docker run -d -p 80:80 -p 3333:3333 -p 9200:9200 cyberabis/elk /elk_start.sh
+# Default command: docker run -d -p 80:80 -p 3333:3333 -p 9200:9200 cyberabis/docker-elkauto /elk_start.sh
 # Default command will start ELK within a docker
 # To send data to elk, stream to TCP port 3333
 # Example: echo 'test data' | nc HOST 3333. Host is the IP of the docker host
-# To login to bash: docker run -t -i cyberabis/elk /bin/bash
+# To login to bash: docker run -t -i cyberabis/docker-elkauto /bin/bash
 
 
 FROM ubuntu
