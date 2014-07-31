@@ -1,7 +1,7 @@
 # Dockerfile for ELK stack on Ubuntu base
 
 # Help:
-# Default command: docker run -d -p 80:80 -p 3333:3333 -p 9200:9200 cyberabis/docker-elkauto /elk_start.sh
+# Default command: docker run -d -p 80:80 -p 3333:3333 -p 3334:3334 -p 9200:9200 cyberabis/docker-elkauto /elk_start.sh
 # Default command will start ELK within a docker
 # To send data to elk, stream to TCP port 3333
 # Example: echo 'test data' | nc HOST 3333. Host is the IP of the docker host
@@ -38,7 +38,7 @@ RUN wget https://download.elasticsearch.org/logstash/logstash/logstash-1.4.2.tar
 	rm logstash-1.4.2.tar.gz && \
 	mv logstash-1.4.2 logstash && \
 	touch logstash.conf && \
-	echo 'input { tcp { port => 3333 } }' >> logstash.conf && \
+	echo 'input { tcp { port => 3333 type => "text event"} tcp { port => 3334 type => "json event" codec => json_lines {} } }' >> logstash.conf && \
 	echo 'output { elasticsearch { host => localhost } }' >> logstash.conf 
 
 # Kibana installation
@@ -71,6 +71,6 @@ RUN touch elk_start.sh && \
 	echo 'exec /logstash/bin/logstash agent -f /logstash.conf' >> elk_start.sh && \
 	chmod 777 elk_start.sh
 
-# 80=apache2, 9200=elasticsearch, 3333=lockstash tcp input
-EXPOSE 80 3333 9200 49021
+# 80=nginx, 9200=elasticsearch, 3333,3334=logstash tcp input
+EXPOSE 80 3333 3334 9200 49021
 
